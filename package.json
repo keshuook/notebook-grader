@@ -1,0 +1,24 @@
+{
+  "name": "notebook-grader",
+  "version": "1.0.0",
+  "description": "notebook grader for prof shyam",
+  "main": "app.js",
+  "scripts": {
+    "start": "source .env && node app.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/keshuook/notebook-grader.git"
+  },
+  "type": "module",
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/keshuook/notebook-grader/issues"
+  },
+  "homepage": "https://github.com/keshuook/notebook-grader#readme",
+  "dependencies": {
+    "@google/genai": "^1.29.1"
+  }
+}
