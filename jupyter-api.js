@@ -43,7 +43,7 @@ class JupyterAPI {
   /**
    * Executes code and returns a comprehensive output object
    * @param {string} code 
-   * @param {string} inputReply - Optional input to inject if code asks for input()
+   * @param {string} inputCallback - Optional callback function to send input if code asks for input()
    */
   async executeCodeblock(code, inputCallback) {
     if (!this.#session) throw new Error("Session not initialized. Call createSession() first.");
