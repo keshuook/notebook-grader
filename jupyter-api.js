@@ -56,6 +56,7 @@ class JupyterAPI {
     // Handle User Input Requests
     future.onStdin = async (msg) => {
         if (msg.header.msg_type === 'input_request') {
+          output.push(msg.content.prompt);
           this.#session.kernel.sendInputReply({ value: await inputCallback(msg.content.prompt) }, msg.header);
         }
     };
