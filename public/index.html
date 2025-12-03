@@ -13,11 +13,11 @@
         <form id="grade-form" enctype="multipart/form-data">
             <div class="form-group">
                 <label for="notebook-file">Jupyter Notebook (.ipynb)</label>
-                <input type="file" id="notebook-file" name="notebook" accept=".ipynb" required>
+                <input type="file" id="notebook-file" name="notebook" accept=".ipynb" required multiple>
             </div>
             <div class="form-group">
                 <label for="rubric-file">Rubric (.txt)</label>
-                <input type="file" id="rubric-file" name="rubric" accept=".txt" required>
+                <input type="file" id="rubric-file" name="rubric" accept=".txt, .pdf" required>
             </div>
             <button type="submit">Grade</button>
         </form>

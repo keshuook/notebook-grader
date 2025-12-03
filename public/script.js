@@ -1,7 +1,7 @@
 document.getElementById('grade-form').addEventListener('submit', async (event) => {
     event.preventDefault();
 
-    const notebookFile = document.getElementById('notebook-file').files[0];
+    const notebookFile = document.getElementById('notebook-file').files;
     const rubricFile = document.getElementById('rubric-file').files[0];
     const resultDiv = document.getElementById('result');
     const gradeDiv = document.getElementById('grade');
@@ -13,7 +13,9 @@ document.getElementById('grade-form').addEventListener('submit', async (event) =
     }
 
     const formData = new FormData();
-    formData.append('notebook', notebookFile);
+    for (let k of notebookFile) {
+        formData.append('notebook', k);
+    }
     formData.append('rubric', rubricFile);
 
     resultDiv.classList.add('hidden');

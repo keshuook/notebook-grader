@@ -1,10 +1,13 @@
 import fs from "fs";
+import { PDFParse } from "pdf-parse";
 import { GoogleGenAI } from "@google/genai";
 import process from "process";
 import express from "express";
+import multer from "multer";
 import http from "http";
 
 const app = express();
+const upload = multer();
 const port = 3000;
 
 app.use(express.static("public"));
@@ -45,53 +48,48 @@ async function gradeNotebook(notebookContent, rubricContent) {
   return { grade, justification: justification.join(" ") };
 }
 
-function parseMultipart(body, boundary) {
-    const parts = body.split(`--${boundary}`);
-    const files = {};
+// function parseMultipart(body, boundary) {
+//     const parts = body.split(`--${boundary}`);
+//     const files = {};
 
-    for (const part of parts) {
-        if (part.includes('Content-Disposition')) {
-            const nameMatch = part.match(/name=\"([^\"]+)\"/);
-            if (nameMatch) {
-                const name = nameMatch[1];
-                const contentMatch = part.split('\r\n\r\n');
-                if (contentMatch.length > 1) {
-                    const content = contentMatch[1].trim();
-                    files[name] = content;
-                }
-            }
-        }
-    }
-    return files;
-}
+//     for (const part of parts) {
+//         if (part.includes('Content-Disposition')) {
+//             const nameMatch = part.match(/name=\"([^\"]+)\"/);
+//             if (nameMatch) {
+//                 const name = nameMatch[1];
+//                 const contentMatch = part.split('\r\n\r\n');
+//                 if (contentMatch.length > 1) {
+//                     const content = contentMatch[1].trim();
+//                     files[name] = content;
+//                 }
+//             }
+//         }
+//     }
+//     // console.log(files);
+//     return files;
+// }
 
+const uploadMiddleware = upload.fields([
+  { name: "notebook", maxCount: 3 },
+  { name: "rubric", maxCount: 1 },
+]);
+app.post("/grade", uploadMiddleware, async (req, res) => {
+  try {
+      const parsedRubric = new PDFParse({ data: req.files["rubric"][0].buffer });
+      const rubricContent = await parsedRubric.getText();
+      const notebookContent = req.files['notebook'][0].buffer.toString('utf-8');
+      console.log(notebookContent)
+      if (!notebookContent || !rubricContent) {
+          return res.status(400).json({ error: "Missing notebook or rubric file." });
+      }
 
-app.post("/grade", (req, res) => {
-  const contentType = req.headers["content-type"];
-  const boundary = contentType.split("boundary=")[1];
-  let body = "";
-
-  req.on("data", (chunk) => {
-    body += chunk.toString();
-  });
-
-  req.on("end", async () => {
-    try {
-        const files = parseMultipart(body, boundary);
-        const notebookContent = files.notebook;
-        const rubricContent = files.rubric;
-
-        if (!notebookContent || !rubricContent) {
-            return res.status(400).json({ error: "Missing notebook or rubric file." });
-        }
-
-        const result = await gradeNotebook(notebookContent, rubricContent);
-        res.json(result);
-    } catch (error) {
-        console.error(error);
-        res.status(500).json({ error: "An error occurred while grading." });
-    }
-  });
+      // const result = await gradeNotebook(notebookContent, rubricContent);
+      // res.json(result);
+      res.json({ grade: "C", justification: "test" });
+  } catch (error) {
+      console.error(error);
+      res.status(500).json({ error: "An error occurred while grading." });
+  }
 });
 
 app.listen(port, () => {
