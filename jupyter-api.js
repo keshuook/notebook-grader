@@ -3,7 +3,7 @@ import { WebSocket } from 'ws';
 
 global.WebSocket = WebSocket;
 
-class JupyterAPI {
+export class JupyterAPI {
   /** @type {ServerConnection.ISettings} */
   #serverSettings;
   /** @type {KernelManager} */

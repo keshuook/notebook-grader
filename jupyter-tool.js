@@ -1,6 +1,7 @@
 import { Type } from '@google/genai';
 import { exec } from 'child_process';
 import {writeFileSync} from 'fs';
+import JupyterAPI from "./jupyter-api.js"
 
 const executeNBTool = {
     name: "execute-cell",

@@ -4,7 +4,7 @@
   "description": "notebook grader for prof shyam",
   "main": "app.js",
   "scripts": {
-    "start": "node app.js",
+    "start": "source .env; GEMINI_API_KEY=$GEMINI_API_KEY node app.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {

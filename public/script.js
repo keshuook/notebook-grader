@@ -1,3 +1,4 @@
+const md = window.markdownit();
 document.getElementById('grade-form').addEventListener('submit', async (event) => {
     event.preventDefault();
 
@@ -6,6 +7,7 @@ document.getElementById('grade-form').addEventListener('submit', async (event) =
     const resultDiv = document.getElementById('result');
     const gradeDiv = document.getElementById('grade');
     const justificationDiv = document.getElementById('justification');
+    const loader = document.getElementById('loader');
 
     if (!notebookFile || !rubricFile) {
         alert('Please select both files.');
@@ -19,6 +21,7 @@ document.getElementById('grade-form').addEventListener('submit', async (event) =
     formData.append('rubric', rubricFile);
 
     resultDiv.classList.add('hidden');
+    loader.classList.remove('hidden');
 
     try {
         const response = await fetch('/grade', {
@@ -32,7 +35,8 @@ document.getElementById('grade-form').addEventListener('submit', async (event) =
 
         const result = await response.json();
         gradeDiv.textContent = `Grade: ${result.grade}`;
-        justificationDiv.textContent = result.justification;
+        justificationDiv.innerHTML = md.render(result.justification);
+        loader.classList.add('hidden');
         resultDiv.classList.remove('hidden');
     } catch (error) {
         console.error(error);
