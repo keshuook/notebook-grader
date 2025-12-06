@@ -34,8 +34,7 @@ document.getElementById('grade-form').addEventListener('submit', async (event) =
         }
 
         const result = await response.json();
-        gradeDiv.textContent = `Grade: ${result.grade}`;
-        justificationDiv.innerHTML = md.render(result.justification);
+        justificationDiv.innerHTML = md.render(result.aiOut);
         loader.classList.add('hidden');
         resultDiv.classList.remove('hidden');
     } catch (error) {

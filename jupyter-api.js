@@ -1,7 +1,4 @@
 import { SessionManager, KernelManager, ServerConnection } from '@jupyterlab/services';
-import { WebSocket } from 'ws';
-
-global.WebSocket = WebSocket;
 
 export class JupyterAPI {
   /** @type {ServerConnection.ISettings} */
@@ -15,9 +12,8 @@ export class JupyterAPI {
 
   constructor(baseUrl, token = '') {
     this.#serverSettings = ServerConnection.makeSettings({
-      baseUrl,
-      token,
-      WebSocket: WebSocket
+      baseUrl: baseUrl,
+      token: token
     });
 
     // Initialize Managers
@@ -57,7 +53,7 @@ export class JupyterAPI {
     future.onStdin = async (msg) => {
         if (msg.header.msg_type === 'input_request') {
           output.push(msg.content.prompt);
-          this.#session.kernel.sendInputReply({ value: await inputCallback(msg.content.prompt) }, msg.header);
+          this.#session.kernel.sendInputReply({ value: inputCallback(msg.content.prompt) }, msg.header);
         }
     };
 
@@ -103,28 +99,3 @@ export class JupyterAPI {
     this.#sessionManager.dispose();
   }
 }
-
-// Usage Example
-(async () => {
-    const api = new JupyterAPI('http://localhost:8888');
-    await api.createSession();
-
-    const code = `x = input("Enter a first name: ")
-print(x + "? Got it!")
-y = input("Enter a last name: ")
-print(y + "? Got it!")`
-
-    const result = await api.executeCodeblock(code, (msg) => {
-      return new Promise((resolve) => {
-        setTimeout(() => {
-          resolve((["Jame", "Jack", "Arnold", "Butler", "Muffin", "Gang"])[Math.floor(Math.random()*6)]);
-        }, 500);
-      })
-    });
-    
-    console.log(result);
-
-    console.log(await api.executeCodeblock(`print(x+y)`));
-
-    api.shutdownAPI();
-})();

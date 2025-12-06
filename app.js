@@ -3,10 +3,14 @@ import { GoogleGenAI } from "@google/genai";
 import process from "process";
 import express from "express";
 import multer from "multer";
+import {config} from "./config.js"
+import { JupyterAPI } from "./jupyter-api.js";
+import { executeNBTool } from "./jupyter-tool.js";
 
 const app = express();
 const upload = multer();
 const port = 3000;
+const jupyter = new JupyterAPI("http://localhost:8888", "");
 
 app.use(express.static("public"));
 const ai = new GoogleGenAI({apiKey: process.env.GEMINI_API_KEY});
@@ -22,28 +26,93 @@ function notebookRepresentation(cells) {
 }
 
 async function gradeNotebook(notebookContent, rubricContent) {
-  const data = JSON.parse(notebookContent);
-  const cells = data.cells;
+  const conversationHistory = [];
+  const aiout = [];
+  const cells = JSON.parse(notebookContent).cells;
+  const formattedNotebook = notebookRepresentation(cells);
 
-  const response = await ai.models.generateContent({
-    model: "gemini-2.5-flash",
-    contents: `RUBRIC: ${rubricContent}
-    NOTEBOOK: ${notebookRepresentation(cells)}`,
-    config: {
-      systemInstruction: `You are an expert code reviewer.
-        Review the following Jupyter notebook submission according to the provided rubric.
-        Provide detailed feedback on each code cell, highlighting strengths and areas for
-        improvement based on the rubric criteria.
-        
-        Your response should be short and succinct. It should be composed of a mark from 0 to 100%, followed by a breakdown of the marks per cell`,
-      temperature: 0,
-    },
-  });
+  conversationHistory.push({role: "user", parts: [{ text: formattedNotebook }]});
 
-  const grade = response.text.slice(0, response.text.indexOf('%') + 1)
-  const justification = response.text.slice(response.text.indexOf('%') + 1);
-  return { grade, justification };
-}
+  let shouldGenerate = true;
+  await jupyter.createSession();
+
+  while(shouldGenerate) {
+    console.log("Generating...");
+    const res = await ai.models.generateContent({
+      model: config.model,
+      contents: conversationHistory,
+      config: {
+        temperature: 0,
+        tools: [{functionDeclarations: [executeNBTool]}],
+        systemInstruction: {
+          parts: [{ text: `${config.systemPrompt}
+You are to grade the notebooks based on the following rubric.
+${rubricContent}` }]
+        }
+      }
+    });
+
+    const functionCalls = res.functionCalls;
+    shouldGenerate = functionCalls && functionCalls.length > 0;
+    
+    if (res.text) aiout.push(res.text);
+
+    const modelParts = [];
+    if (res.text) {
+        modelParts.push({ text: res.text });
+    }
+    // Only add functionCalls if they exist
+    if (functionCalls && functionCalls.length > 0) {
+        functionCalls.forEach(call => {
+            modelParts.push({ functionCall: call });
+        });
+    }
+    
+    conversationHistory.push({ role: "model", parts: modelParts });
+
+    if(shouldGenerate) {
+      const functionParts = [];
+      
+      for (const call of functionCalls) {
+        if(call.name == "run_notebook_cell") {
+          console.log(`> Executing cell ${call.args.cell_index}...`);
+          
+          await jupyter.createSession();
+          
+          let index = 0;
+          // Safety check: ensure input_value exists
+          const inputs = call.args.input_value || [];
+          
+          // Get source properly
+          const source = Array.isArray(cells[call.args.cell_index].source) 
+              ? cells[call.args.cell_index].source.join("") 
+              : cells[call.args.cell_index].source;
+
+          const output = await jupyter.executeCodeblock(source, (prompt) => {
+            return inputs[index++] || ''; 
+          });
+
+          console.log(`> Output: ${output.substring(0, 50)}...`);
+
+          functionParts.push({
+              functionResponse: {
+                name: "run_notebook_cell",
+                response: { result: output } 
+              }
+          });
+        }
+      }
+
+      // Only push function role if we actually executed something
+      if (functionParts.length > 0) {
+          conversationHistory.push({role: "function", parts: functionParts});
+      }
+    }
+  }
+
+  jupyter.shutdownSession();
+  return aiout.join("\n");
+};
 
 const uploadMiddleware = upload.fields([
   { name: "notebook", maxCount: 3 },
@@ -59,7 +128,7 @@ app.post("/grade", uploadMiddleware, async (req, res) => {
       }
 
       const result = await gradeNotebook(notebookContent, rubricContent);
-      res.json(result);
+      res.json({aiOut: result});
   } catch (error) {
       console.error(error);
       res.status(500).json({ error: "An error occurred while grading." });

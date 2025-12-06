@@ -1,27 +1,23 @@
 import { Type } from '@google/genai';
-import { exec } from 'child_process';
-import {writeFileSync} from 'fs';
-import JupyterAPI from "./jupyter-api.js"
 
 const executeNBTool = {
-    name: "execute-cell",
-    description: "This function takes in one input, the cell number. It executes the jupyter notebook cell and returns the output.",
+    name: "run_notebook_cell",
+    description: "Executes a specific code cell in the Jupyter Notebook. Use this to run student code or test logic.",
     parameters: {
-        type: Type.OBJECT,
+        type: "OBJECT",
         properties: {
-            cellNo: {
-                type: Type.INTEGER,
-                description: "The cell number of the cell that has to be executed."
-            }
+        cell_index: {
+            type: Type.NUMBER,
+            description: "The 0-based index of the cell to run."
+        },
+        input_value: {
+            type: Type.ARRAY,
+            items: {type: Type.STRING},
+            description: "If the cell calls input(), provide the text response(s) here. Defaults to empty string if omitted."
         }
+        },
+        required: ["cell_index"]
     }
 }
 
-function executeNB(notebook, no, callback) {
-    writeFileSync("tmp.py", notebook.cells[no].source.join(""));
-    exec("python tmp.py", (err, stdout, stderr) => {
-        callback(stdout);
-    });
-}
-
-export {executeNB, executeNBTool};
+export {executeNBTool};

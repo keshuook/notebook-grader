@@ -4,8 +4,8 @@
   "description": "notebook grader for prof shyam",
   "main": "app.js",
   "scripts": {
-    "start": "source .env; GEMINI_API_KEY=$GEMINI_API_KEY node app.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "node --env-file=.env app.js",
+    "test": "node --env-file=.env test.js"
   },
   "repository": {
     "type": "git",
@@ -21,7 +21,10 @@
   "dependencies": {
     "@google/genai": "^1.29.1",
     "@jupyterlab/services": "^7.5.0",
+    "@types/pdf-parse": "1.1.5",
     "express": "^5.1.0",
+    "multer": "2.0.2",
+    "pdf-parse": "^2.4.5",
     "ws": "^8.18.3"
   }
 }
