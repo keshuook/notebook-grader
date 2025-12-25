@@ -4,7 +4,7 @@ import { JupyterAPI } from "./jupyter-api.js";
 import { executeNBTool } from "./jupyter-tool.js";
 import process from "process";
 
-const jupyter = new JupyterAPI("http://localhost:8888", ""); // Jupyter API
+const jupyter = new JupyterAPI("http://127.0.0.1:8888", ""); // Jupyter API
 const ai = new GoogleGenAI({apiKey: process.env.GEMINI_API_KEY});
 
 function notebookRepresentation(cells) {
