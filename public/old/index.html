@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Notebook Grader</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Notebook Grader</h1>
+        <p>Upload a Jupyter Notebook file and a rubric file to get a grade and justification.</p>
+        <form id="grade-form" enctype="multipart/form-data">
+            <div class="form-group">
+                <label for="notebook-file">Jupyter Notebook (.ipynb)</label>
+                <input type="file" id="notebook-file" name="notebook" accept=".ipynb" required multiple>
+            </div>
+            <div class="form-group">
+                <label for="rubric-file">Rubric (.txt)</label>
+                <input type="file" id="rubric-file" name="rubric" accept=".txt, .pdf" required>
+            </div>
+            <button type="submit">Grade</button>
+        </form>
+        <div id="loader" class="hidden"></div>
+        <div id="result" class="hidden">
+            <h2>Result</h2>
+            <div id="grade"></div>
+            <div id="justification"></div>
+        </div>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/markdown-it@14.1.0/dist/markdown-it.min.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>

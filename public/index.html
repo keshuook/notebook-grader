@@ -3,32 +3,43 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Notebook Grader</title>
-    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="style.css">
+    <title>Notebook Grader Studio</title>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
 </head>
 <body>
-    <div class="container">
-        <h1>Notebook Grader</h1>
-        <p>Upload a Jupyter Notebook file and a rubric file to get a grade and justification.</p>
-        <form id="grade-form" enctype="multipart/form-data">
-            <div class="form-group">
-                <label for="notebook-file">Jupyter Notebook (.ipynb)</label>
-                <input type="file" id="notebook-file" name="notebook" accept=".ipynb" required multiple>
+    <div id="overlay">
+        <h2>⚠️ Multiple Tabs Detected</h2>
+        <p>The grader is open in another tab. Please use the grader in that tab or close that tab and re-open the grader here.</p>
+    </div>
+    <div id="container">
+        <div id="files">
+            <h3>🗂️ Grading Queue</h3>
+            <div id="upload-section" style="margin-bottom: 20px; border: 1px dashed #555; padding: 10px; text-align: center;">
+                <input type="file" id="rubric-file" accept=".pdf" style="margin-bottom: 5px; width: 100%">
+                <small style="display:block; color: #888;">1. Select Question Paper (PDF)</small>
+                <hr style="border-color: #333">
+                <input type="file" id="notebook-file" accept=".ipynb" multiple style="width: 100%">
+                <small style="display:block; color: #888;">2. Select Notebooks</small>
             </div>
-            <div class="form-group">
-                <label for="rubric-file">Rubric (.txt)</label>
-                <input type="file" id="rubric-file" name="rubric" accept=".txt, .pdf" required>
+            <div id="file-list"></div>
+            <button id="output-grade-button" class="btn">View Grades</button>
+        </div>
+
+        <div id="viewer">
+            <div style="text-align: center; color: #555; margin-top: 100px;">
+                <h2>Grader Studio</h2>
+                <p>Please upload a question paper and jupyter notebook(s) to get started.</p>
             </div>
-            <button type="submit">Grade</button>
-        </form>
-        <div id="loader" class="hidden"></div>
-        <div id="result" class="hidden">
-            <h2>Result</h2>
-            <div id="grade"></div>
-            <div id="justification"></div>
+        </div>
+
+        <div id="console-panel">
+            <div style="color: #666; border-bottom: 1px solid #333; margin-bottom: 5px;">OUTPUT TERMINAL</div>
+            <div id="logs"></div>
         </div>
     </div>
-    <script src="https://cdn.jsdelivr.net/npm/markdown-it@14.1.0/dist/markdown-it.min.js"></script>
     <script src="script.js"></script>
 </body>
 </html>
