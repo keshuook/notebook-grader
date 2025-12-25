@@ -26,14 +26,17 @@ export class JupyterAPI {
 
   async createSession() {
     // Ensure managers are ready
+    console.log("[jupyter] Waiting for kernel manager...");
     await this.#kernelManager.ready;
+    console.log("[jupyter] Waiting for session manager...");
     await this.#sessionManager.ready;
-
+    console.log("[jupyter] Starting new session...");
     this.#session = await this.#sessionManager.startNew({
       path: 'autograder-scratchpad.ipynb',
       type: 'notebook',
       name: 'python3'
     });
+    console.log("[jupyter] Session started.");
   }
 
   /**
