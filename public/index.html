@@ -10,6 +10,11 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
 </head>
 <body>
+    <div style="display: none;">
+        <div id="grades">
+            <a href="javascript:downloadGrade()" class="btn-download">Download</a>
+        </div>
+    </div>
     <div id="overlay">
         <h2>⚠️ Multiple Tabs Detected</h2>
         <p>The grader is open in another tab. Please use the grader in that tab or close that tab and re-open the grader here.</p>
@@ -18,7 +23,7 @@
         <div id="files">
             <h3>🗂️ Grading Queue</h3>
             <div id="upload-section" style="margin-bottom: 20px; border: 1px dashed #555; padding: 10px; text-align: center;">
-                <input type="file" id="rubric-file" accept=".pdf" style="margin-bottom: 5px; width: 100%">
+                <input type="file" id="question-file" accept=".pdf" style="margin-bottom: 5px; width: 100%">
                 <small style="display:block; color: #888;">1. Select Question Paper (PDF)</small>
                 <hr style="border-color: #333">
                 <input type="file" id="notebook-file" accept=".ipynb" multiple style="width: 100%">

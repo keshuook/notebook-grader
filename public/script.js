@@ -1,9 +1,84 @@
 // --- STATE MANAGEMENT ---
 const state = {
-    rubric: null,
+    question: null,
     queue: [], // Array of { id, file, status, content }
     isProcessing: false,
+    grades: []
 };
+
+document.getElementById("output-grade-button").addEventListener("click", () => {
+    const viewer = document.getElementById("viewer");
+    viewer.innerHTML = "";
+    viewer.appendChild(document.getElementById("grades"));
+});
+
+function downloadGrade() {
+    const csv = "Name,Grade,Feedback\n".concat(state.grades.map(v => {
+        return `${v.name},${v.grade},${v.feedback.replace(/\n/g, " ")}`;
+    }).join("\n"));
+
+    const blob = new Blob([csv], {type: "text/csv"});
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.setAttribute("href", url);
+    link.setAttribute("download", "grades.csv");
+    document.body.appendChild(link);
+
+    link.click();
+    link.remove();
+    URL.revokeObjectURL(url);
+}
+
+function addGrade(name, json) {
+    const table = document.createElement("table");
+    table.classList.add("grade-table");
+    
+    const header = document.createElement("tr");
+    const que = document.createElement("th");
+    que.innerHTML = "Question";
+    const grd = document.createElement("th");
+    grd.innerHTML = "Grade";
+    header.appendChild(que);
+    header.appendChild(grd);
+    table.appendChild(header);
+
+    let grade = 0;
+    let feedback = "";
+    json.forEach(obj => {
+        const tr = document.createElement("tr");
+        const q = document.createElement("td");
+        const g = document.createElement("td");
+        q.innerHTML = obj.name;
+        g.innerHTML = obj.grade;
+        tr.appendChild(q);
+        tr.appendChild(g);
+        table.appendChild(tr);
+
+        grade += obj.grade;
+        feedback = feedback.concat(`${obj.name}
+${obj.feedback}
+`);
+    });
+
+    const tr = document.createElement("tr");
+    tr.classList.add("total-row");
+    const q = document.createElement("td");
+    const g = document.createElement("td");
+    q.innerHTML = "Total";
+    g.innerHTML = grade;
+    tr.appendChild(q);
+    tr.appendChild(g);
+    table.appendChild(tr);
+
+    const grades = document.getElementById("grades");
+    const h1 = document.createElement("h1");
+    h1.innerHTML = name;
+    h1.classList.add("grade-header");
+    grades.appendChild(h1);
+    grades.appendChild(table);
+
+    state.grades.push({name, grade, feedback});
+}
 
 const ws = new WebSocket("http://localhost:3000");
 
@@ -36,33 +111,22 @@ function initSocket() {
             case "grade_info":
                 log("Grader", data.message, 'info');
                 break;
+            case "final_grade":
+                if(JSON.parse(data.message).length == 0) {
+                    log("System", `No questions were graded in ${data.filename}!`, 'error');
+                }
+                addGrade(data.filename, JSON.parse(data.message));
+                break;
         }
     });
-
-    // // Backend event: Grading Updates
-    // state.socket.on('GRADE_UPDATE', (data) => {
-    //     log('Grader', data.message, 'info');
-    // });
-
-    // // Backend event: Grading Finished for specific file
-    // state.socket.on('GRADE_COMPLETE', (data) => {
-    //     const fileObj = state.queue.find(f => f.name === data.filename);
-    //     if (fileObj) {
-    //         fileObj.status = 'done';
-    //         updateSidebar();
-    //         log('Grader', `Finished grading ${data.filename}`, 'success');
-    //     }
-    //     state.isProcessing = false;
-    //     processQueue(); // Trigger next
-    // });
 }
 
 
-// Listen for Rubric Upload
+// Listen for Question Upload
 
-document.getElementById('rubric-file').addEventListener('change', (e) => {
-    state.rubric = e.target.files[0];
-    log('System', `Question Paper loaded: ${state.rubric.name}`, 'info');
+document.getElementById('question-file').addEventListener('change', (e) => {
+    state.question = e.target.files[0];
+    log('System', `Question Paper loaded: ${state.question.name}`, 'info');
 });
 
 // Listen for Notebook Uploads
@@ -89,7 +153,7 @@ document.getElementById('notebook-file').addEventListener('change', async (e) =>
 // The Main Loop
 function processQueue() {
     if (state.isProcessing) return;
-    if (!state.rubric) { 
+    if (!state.question) { 
         log('Error', 'Please upload a question paper first!', 'error'); 
         return; 
     }
@@ -108,7 +172,7 @@ function uploadAndGrade(fileObj) {
     
     const formData = new FormData();
     formData.append('notebook', fileObj.file);
-    formData.append('rubric', state.rubric);
+    formData.append('question_paper', state.question);
 
     fetch('/api/upload', { // Your express endpoint
         method: 'POST',

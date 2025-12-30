@@ -16,8 +16,8 @@ let currentWS; // Only one client is allowed to connect
 const upload = multer();
 
 const uploadMiddleware = upload.fields([
-  { name: "notebook", maxCount: 3 },
-  { name: "rubric", maxCount: 1 },
+  { name: "notebook", maxCount: 1 },
+  { name: "question_paper", maxCount: 1 },
 ]);
 
 // Web Socket for error communication and progress communication
@@ -39,22 +39,27 @@ app.ws("/", (ws, req) => {
 
 app.post("/api/upload", uploadMiddleware, async (req, res) => {
   try {
-    const parsedRubric = new PDFParse({ data: req.files["rubric"][0].buffer });
-    const rubricContent = await parsedRubric.getText();
+    console.log(req.files);
+    const parsedPDF = new PDFParse({ data: req.files["question_paper"][0].buffer });
+    const questionsContent = await parsedPDF.getText();
     const notebookContent = req.files['notebook'][0].buffer.toString('utf-8');
-    if (!notebookContent || !rubricContent) {
+    if (!notebookContent || !questionsContent) {
       return res.status(400).json({ error: "Missing notebook or rubric file." });
     }
 
     res.write("File Uploaded Successfully!");
-    const result = await gradeNotebook(notebookContent, rubricContent, (msg) => {
+    const result = await gradeNotebook(notebookContent, questionsContent, (msg) => {
       if(currentWS) currentWS.send(JSON.stringify({
         header: 'grade_info',
         message: msg
       }));
     });
 
-    console.log(result);
+    if(currentWS) currentWS.send(JSON.stringify({
+      header: 'final_grade',
+      filename: req.files['notebook'][0].originalname,
+      message: JSON.stringify(result)
+    }));
 
     if(currentWS) currentWS.send(JSON.stringify({
       header: 'grade',

@@ -1,4 +1,4 @@
-import {config} from "./config.js";
+import { config } from "./config.js";
 import { GoogleGenAI } from "@google/genai";
 import { JupyterAPI } from "./jupyter-api.js";
 import { executeNBTool } from "./jupyter-tool.js";
@@ -17,9 +17,18 @@ function notebookRepresentation(cells) {
     .join("\n");
 }
 
+// Returns the grade, here is the rubric
+function getGrade(json) {
+  let correctness = Math.max(Math.min(0.45*json.correctness, 4.5), 0);
+  let executes = json.number_of_major_errors > 0 ? 0 : Math.max(0, (4.5 - (1.5 * json.number_of_minor_errors)));
+  let readiblity = Math.min(1, 0.5*json.descriptive_comments);
+
+  return correctness + executes + readiblity;
+}
+
 // This function grades the notebook via the Gemini API
 
-async function gradeNotebook(notebookContent, rubricContent, outCallback) {
+async function gradeNotebook(notebookContent, questionsContent, outCallback) {
   const conversationHistory = []; // Maintain the conversation history
   const aiout = []; // List of all comments
   const cells = JSON.parse(notebookContent).cells; // Jupyter Notebook Cells represented as JSON Object
@@ -44,8 +53,8 @@ async function gradeNotebook(notebookContent, rubricContent, outCallback) {
         tools: [{functionDeclarations: [executeNBTool]}],
         systemInstruction: {
           parts: [{ text: `${config.systemPrompt}
-Here is the question paper for reference:
-${rubricContent}` }]
+Here are the questions you will be grading the notebooks on:
+${questionsContent}` }]
         }
       }
     });
@@ -107,7 +116,20 @@ ${rubricContent}` }]
   }
 
   jupyter.shutdownSession();
-  return aiout.join("\n");
+
+  const gradeArr = [];
+
+  aiout.forEach(raw => {
+    const json = raw.startsWith("```json") ? JSON.parse(raw.substring(7, raw.length - 3)) : JSON.parse(raw);
+    for (let x in json) {
+      const currentJSON = json[x];
+      currentJSON['name'] = x;
+      currentJSON['grade'] = getGrade(json[x]);
+      gradeArr.push(currentJSON);
+    }
+  });
+
+  return gradeArr;
 };
 
 export default gradeNotebook;
