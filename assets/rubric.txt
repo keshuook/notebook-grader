@@ -1,1 +1,0 @@
-A function that outputs the Fibonacci sequence up to n numbers.
