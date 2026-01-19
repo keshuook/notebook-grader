@@ -2,7 +2,27 @@
 
 An AI powered python notebook grader.
 
-How to run the notebook server.
+## Cost
+
+This project is coded to use the Google API. When tested with the example notebooks (which can be found in the assets folder of this repository), it was found that 5 requests were made to the model, and ~8650 input tokens were required. Thus, the total evaluation cost (input tokens only) is $0.0025 for such a notebook.
+
+Here is complete data I gathered for making a request with a notebook with 2 questions. (Note how every request has about 200 more input tokens than the previous. This is because each new request has to keep the memory of the previous requests, therefore grading notebooks with more questions becomes a lot more expensive).
+
+|Request|Input|Thought|Output|
+|-|-|-|-|
+|Request 1|1075|341|42|
+|Request 2|1239|247|128|
+|Request 3|1400|0|85|
+|**Total**|**3714**|**588**|**255**|
+
+**Total Price for Grading 2 Cell Notebook:**
+
+Note, according to the [pricing table](https://ai.google.dev/gemini-api/docs/pricing), 1 million input tokens for gemini-2.5-flash cost $0.30 and 1 million output tokens costs $2.50.
+
+Input: $$\frac{0.3}{10^6} * 3714 = \$ 0.0011142$$
+Output: $$\frac{2.5}{10^6} * (588 + 255) = \$ 0.0021075$$
+
+Thus, the whole notebook was evaluated for $0.003.
 
 ## How to setup
 
